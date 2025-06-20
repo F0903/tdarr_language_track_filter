@@ -38,11 +38,13 @@ const details = () => ({
             sets: [
               {
                 logic: "AND",
-                inputs: {
-                  name: "provider",
-                  value: "Radarr",
-                  condition: "===",
-                },
+                inputs: [
+                  {
+                    name: "provider",
+                    value: "Radarr",
+                    condition: "===",
+                  },
+                ],
               },
             ],
           },
@@ -62,11 +64,13 @@ const details = () => ({
             sets: [
               {
                 logic: "AND",
-                inputs: {
-                  name: "provider",
-                  value: "Radarr",
-                  condition: "===",
-                },
+                inputs: [
+                  {
+                    name: "provider",
+                    value: "Radarr",
+                    condition: "===",
+                  },
+                ],
               },
             ],
           },
@@ -90,11 +94,13 @@ const details = () => ({
             sets: [
               {
                 logic: "AND",
-                inputs: {
-                  name: "provider",
-                  value: "Sonarr",
-                  condition: "===",
-                },
+                inputs: [
+                  {
+                    name: "provider",
+                    value: "Sonarr",
+                    condition: "===",
+                  },
+                ],
               },
             ],
           },
@@ -114,11 +120,13 @@ const details = () => ({
             sets: [
               {
                 logic: "AND",
-                inputs: {
-                  name: "provider",
-                  value: "Sonarr",
-                  condition: "===",
-                },
+                inputs: [
+                  {
+                    name: "provider",
+                    value: "Sonarr",
+                    condition: "===",
+                  },
+                ],
               },
             ],
           },
