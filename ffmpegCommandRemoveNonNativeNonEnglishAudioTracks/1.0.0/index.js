@@ -209,7 +209,12 @@ const do_sonarr = async (args) => {
   seriesEndpoint.searchParams.append("tvdbid", tvdbId);
   seriesEndpoint.searchParams.append("includeSeasonImages", false);
 
-  const response = await fetch(seriesEndpoint);
+  const response = await fetch(seriesEndpoint, {
+    method: "GET",
+    headers: {
+      Authorization: `Bearer ${sonarrApiKey}`,
+    },
+  });
   if (!response.ok) {
     log("Failed to fetch series data from Sonarr:", response.statusText);
     throw new Error("Failed to fetch series data from Sonarr.");
