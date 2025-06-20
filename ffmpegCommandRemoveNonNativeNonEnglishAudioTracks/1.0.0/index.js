@@ -32,17 +32,21 @@ const details = () => ({
       defaultValue: "",
       inputUI: {
         type: "text",
-        displayConditions: {
-          logic: "AND",
-          sets: {
+        displayConditions: [
+          {
             logic: "AND",
-            inputs: {
-              name: "provider",
-              value: "Radarr",
-              condition: "===",
-            },
+            sets: [
+              {
+                logic: "AND",
+                inputs: {
+                  name: "provider",
+                  value: "Radarr",
+                  condition: "===",
+                },
+              },
+            ],
           },
-        },
+        ],
       },
       tooltip: "Input your Radarr api key here.",
     },
@@ -52,17 +56,21 @@ const details = () => ({
       defaultValue: "http://192.168.1.2:7878",
       inputUI: {
         type: "text",
-        displayConditions: {
-          logic: "AND",
-          sets: {
+        displayConditions: [
+          {
             logic: "AND",
-            inputs: {
-              name: "provider",
-              value: "Radarr",
-              condition: "===",
-            },
+            sets: [
+              {
+                logic: "AND",
+                inputs: {
+                  name: "provider",
+                  value: "Radarr",
+                  condition: "===",
+                },
+              },
+            ],
           },
-        },
+        ],
       },
       tooltip:
         "Input your full Radarr url here." +
@@ -76,17 +84,21 @@ const details = () => ({
       defaultValue: "",
       inputUI: {
         type: "text",
-        displayConditions: {
-          logic: "AND",
-          sets: {
+        displayConditions: [
+          {
             logic: "AND",
-            inputs: {
-              name: "provider",
-              value: "Sonarr",
-              condition: "===",
-            },
+            sets: [
+              {
+                logic: "AND",
+                inputs: {
+                  name: "provider",
+                  value: "Sonarr",
+                  condition: "===",
+                },
+              },
+            ],
           },
-        },
+        ],
       },
       tooltip: "Input your Sonarr api key here.",
     },
@@ -96,17 +108,21 @@ const details = () => ({
       defaultValue: "http://192.168.1.2:8989",
       inputUI: {
         type: "text",
-        displayConditions: {
-          logic: "AND",
-          sets: {
+        displayConditions: [
+          {
             logic: "AND",
-            inputs: {
-              name: "provider",
-              value: "Sonarr",
-              condition: "===",
-            },
+            sets: [
+              {
+                logic: "AND",
+                inputs: {
+                  name: "provider",
+                  value: "Sonarr",
+                  condition: "===",
+                },
+              },
+            ],
           },
-        },
+        ],
       },
       tooltip:
         "Input your full Sonarr url here." +
