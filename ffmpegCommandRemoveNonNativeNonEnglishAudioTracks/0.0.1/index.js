@@ -1,26 +1,28 @@
 const details = () => ({
-  id: "Tdarr_Plugin_F0903_remove_non_native_non_english_audio_tracks",
-  Stage: "Pre-processing",
-  Name: "Remove Non-Native Non-English Audio Tracks",
-  Type: "Audio",
-  Operation: "Transcode",
-  Description: `Removes audio tracks that are not in the native language or are not English.
+  name: "Remove Non-Native Non-English Audio Tracks",
+  description: `Removes audio tracks that are not in the native language or are not English.
     Native language is determined by the Sonarr/Radarr API.
     This plugin also sets the audio track with the native language as the default track.`,
-  Version: "0.1",
-  Tags: "pre-processing,configurable",
-  Inputs: [
+  tags: "audio",
+  style: {
+    borderColor: "green",
+  },
+  isStartPlgin: false,
+  pType: "",
+  requiresVersion: "2.11.01",
+  sidebarPosition: 1,
+  icon: "",
+  inputs: [
     {
-      name: "priority",
+      name: "provider",
       type: "string",
       defaultValue: "Sonarr",
       inputUI: {
-        type: "text",
+        type: "dropdown",
+        options: ["Sonarr", "Radarr"],
       },
       tooltip:
-        "Priority for either Radarr or Sonarr. Leaving it empty defaults to Sonarr first." +
-        "\\nExample:\\n" +
-        "Sonarr",
+        "Select the metadata provider, which is either Radarr or Sonarr.",
     },
     {
       name: "radarr_api_key",
@@ -67,22 +69,15 @@ const details = () => ({
         "https://sonarr.example.com",
     },
   ],
+  outputs: [
+    {
+      number: 1,
+      tooltip: "Ran successfully. Continue to the next plugin.",
+    },
+  ],
 });
 
-const response = {
-  processFile: false,
-  // Start by including all streams by default.
-  preset: ", -map 0 ",
-  container: ".",
-  handBrakeMode: false,
-  FFmpegMode: true,
-  reQueueAfter: false,
-  infoLog: "",
-};
-
-const log = (message) => {
-  response.infoLog += message + "\n";
-};
+const log = (message) => console.log(message);
 
 const extractTmdbId = (str) => {
   log("Extracting TMDB ID from string:", str);
@@ -100,13 +95,13 @@ const extractTvdbId = (str) => {
   return match ? match[1] : null;
 };
 
-const filterAudioTracks = (file, langsToKeep, nativeLanguage) => {
-  log("Filtering audio tracks for file: ", file._id);
+const filterAudioTracks = (args, langsToKeep, nativeLanguage) => {
+  log("Filtering audio tracks for file: ", args.inputFileObj._id);
   log("Languages to keep: ", langsToKeep);
 
-  let nativeIndex = -1;
+  let nativeStream = null;
 
-  for (const stream of file.ffProbeData.streams) {
+  for (const stream of args.variables.ffmpegCommand.streams) {
     log("Processing audio stream: ", stream.index);
 
     if (stream.codec_type !== "audio") {
@@ -125,45 +120,46 @@ const filterAudioTracks = (file, langsToKeep, nativeLanguage) => {
       continue;
     }
 
-    if (nativeIndex !== -1 && language === nativeLanguage) {
-      nativeIndex = stream.index;
+    if (!nativeStream && language === nativeLanguage) {
+      nativeStream = stream;
       log(
         `Found native language stream '${language}' with index ${nativeIndex}`
       );
       continue;
     }
 
-    response.preset += `-map -0:a:${stream.index} `;
+    stream.removed = true;
     log(
       `Removed stream with index '${stream.index}' and language '${language}'`
     );
   }
 
-  if (nativeIndex !== -1) {
-    response.preset += `-disposition:a 0 -disposition:a:${nativeIndex} 1`;
+  if (nativeStream) {
+    // Set the native language stream as default
+    nativeStream.outputArgs.push(
+      `-disposition:a 0 -disposition:a:${nativeStream.index} 1`
+    );
     log(
-      `Setting native language stream with index '${nativeIndex}' and language '${nativeLanguage}' as default.`
+      `Setting native language stream with index '${nativeStream.index}' and language '${nativeLanguage}' as default.`
     );
   }
-  response.preset += " -c copy";
-  log("Final preset: ", response.preset);
 };
 
-const do_sonarr = async (inputs, file) => {
-  const sonarrApiKey = inputs.sonarr_api_key;
+const do_sonarr = async (args) => {
+  const sonarrApiKey = args.inputs.sonarr_api_key;
   if (!sonarrApiKey) {
     log("Sonarr API key is not set!");
     throw new Error("Sonarr API key is not set!");
   }
 
-  let filePath = file._id;
+  let filePath = args.inputFileObj._id;
   let tvdbId = extractTvdbId(filePath);
   if (!tvdbId) {
     log("TVDB ID not found in file name:", filePath);
     throw new Error("TVDB ID not found in file name.");
   }
 
-  const seriesEndpoint = new URL("/api/v3/series", inputs.sonarr_url);
+  const seriesEndpoint = new URL("/api/v3/series", args.inputs.sonarr_url);
   seriesEndpoint.searchParams.append("tvdbid", tvdbId);
   seriesEndpoint.searchParams.append("includeSeasonImages", false);
 
@@ -185,45 +181,50 @@ const do_sonarr = async (inputs, file) => {
   const nativeLanguage = series.originalLanguage.name;
   let nativeLanguageThreeLetters = langs.where("name", nativeLanguage)[3];
   filterAudioTracks(
-    file,
+    args,
     [nativeLanguageThreeLetters, "eng"],
     nativeLanguageThreeLetters
   );
 };
 
-const do_radarr = async (inputs, file) => {
-  const radarrApiKey = inputs.radarr_api_key;
+const do_radarr = async (args) => {
+  const radarrApiKey = args.inputs.radarr_api_key;
   if (!radarrApiKey) {
     log("Radarr API key is not set!");
     throw new Error("Radarr API key is not set!");
   }
 
-  let filePath = file._id;
+  let filePath = args.inputFileObj._id;
   let tmdbId = extractTmdbId(filePath);
   if (!tmdbId) {
     log("TMDB ID not found in file name:", filePath);
     throw new Error("TMDB ID not found in file name.");
   }
 
-  const radarrUrl = inputs.radarr_url;
+  const radarrUrl = args.inputs.radarr_url;
 
   //TODO: Implement
 };
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
-const plugin = async (file, librarySettings, inputs, otherArguments) => {
-  const lib = require("../methods/lib")();
+const plugin = async (args) => {
+  const lib = require("../../../../../methods/lib")();
   // eslint-disable-next-line @typescript-eslint/no-unused-vars,no-param-reassign
-  inputs = lib.loadDefaultValues(inputs, details);
+  args.inputs = lib.loadDefaultValues(args.inputs, details);
 
   const strategies = [("sonarr", do_sonarr), ("radarr", do_radarr)];
   for (const [strategy, func] of strategies) {
-    if (inputs.priority.toLowerCase() === strategy) {
-      await func(inputs, file._id);
+    if (args.inputs.provider.toLowerCase() === strategy) {
+      await func(args);
+      break;
     }
   }
 
-  return response;
+  return {
+    outputFileObj: args.inputFileObj,
+    outputNumber: 1,
+    variables: args.variables,
+  };
 };
 
 module.exports.dependencies = ["langs@2.0.0"];
