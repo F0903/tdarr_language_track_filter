@@ -1,3 +1,5 @@
-# Tdarr Language Track Filter
+# Remove Non-Native Non-English Audio Tracks
 
-Two small Tdarr Flow scripts for getting the native language of a movie/series and for getting the index of the audio track with the native language.
+A WIP Tdarr flow plugin that removes non-native non-english audio tracks, and sets the native audio track to be the default.
+
+It gets the native language of the media via the Sonarr or Radarr API.
