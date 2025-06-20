@@ -84,6 +84,14 @@ const log = (message) => {
   response.infoLog += message + "\n";
 };
 
+const extractTmdbId = (str) => {
+  log("Extracting TMDB ID from string:", str);
+
+  // Matches [tmdbid-<id>] where <id> is one or more digits
+  const match = str.match(/\[tmdbid-(\d+)\]/i);
+  return match ? match[1] : null;
+};
+
 const extractTvdbId = (str) => {
   log("Extracting TVDB ID from string:", str);
 
@@ -191,10 +199,10 @@ const do_radarr = async (inputs, file) => {
   }
 
   let filePath = file._id;
-  let tvdbId = extractTvdbId(filePath);
-  if (!tvdbId) {
-    log("TVDB ID not found in file name:", filePath);
-    throw new Error("TVDB ID not found in file name.");
+  let tmdbId = extractTmdbId(filePath);
+  if (!tmdbId) {
+    log("TMDB ID not found in file name:", filePath);
+    throw new Error("TMDB ID not found in file name.");
   }
 
   const radarrUrl = inputs.radarr_url;
