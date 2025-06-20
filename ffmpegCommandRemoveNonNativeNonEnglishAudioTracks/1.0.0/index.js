@@ -7,7 +7,7 @@ const details = () => ({
     This plugin also sets the audio track with the native language as the default track.`,
   tags: "audio",
   style: {
-    borderColor: "green",
+    borderColor: "#6efefc",
   },
   isStartPlgin: false,
   pType: "",
