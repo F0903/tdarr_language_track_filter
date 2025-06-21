@@ -219,6 +219,7 @@ const do_sonarr = async (args) => {
   seriesEndpoint.searchParams.append("tvdbid", tvdbId);
   seriesEndpoint.searchParams.append("includeSeasonImages", false);
 
+  args.jobLog("Fetching series data from Sonarr: ", seriesEndpoint.href);
   const response = await fetch(seriesEndpoint, {
     method: "GET",
     headers: {
