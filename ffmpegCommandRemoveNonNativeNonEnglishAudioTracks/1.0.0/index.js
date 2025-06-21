@@ -215,9 +215,7 @@ const do_sonarr = async (args) => {
     throw new Error("TVDB ID not found in file name.");
   }
 
-  let baseUrl = args.inputs.sonarr_url;
-  if (!baseUrl.endsWith("/")) baseUrl += "/";
-  const seriesEndpoint = new URL("/api/v3/series", baseUrl);
+  const seriesEndpoint = new URL("/api/v3/series", args.inputs.sonarr_url);
   seriesEndpoint.searchParams.append("tvdbid", tvdbId);
   seriesEndpoint.searchParams.append("includeSeasonImages", "false");
 
