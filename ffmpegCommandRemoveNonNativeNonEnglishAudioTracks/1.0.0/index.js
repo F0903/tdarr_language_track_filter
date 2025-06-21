@@ -184,6 +184,13 @@ const filterAudioTracks = (args, langsToKeep, nativeLanguage) => {
       continue;
     }
 
+    if (langsToKeep.includes(language)) {
+      args.jobLog(
+        `Keeping stream with index '${stream.index}' and language '${language}' since it is in the allowed languages.`
+      );
+      continue;
+    }
+
     stream.removed = true;
     args.jobLog(
       `Removed stream with index '${stream.index}' and language '${language}'`
