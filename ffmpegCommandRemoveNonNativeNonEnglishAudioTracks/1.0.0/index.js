@@ -202,6 +202,8 @@ const filterAudioTracks = (args, langsToKeep, nativeLanguage) => {
 };
 
 const do_sonarr = async (args) => {
+  args.jobLog("Running Sonarr strategy...");
+
   const sonarrApiKey = args.inputs.sonarr_api_key;
   if (!sonarrApiKey) {
     args.jobLog("Sonarr API key is not set!");
@@ -211,7 +213,7 @@ const do_sonarr = async (args) => {
   let filePath = args.inputFileObj._id;
   let tvdbId = extractTvdbId(filePath);
   if (!tvdbId) {
-    args.jobLog("TVDB ID not found in file name:", filePath);
+    args.jobLog("TVDB ID not found in file name: " + filePath);
     throw new Error("TVDB ID not found in file name.");
   }
 
@@ -219,7 +221,7 @@ const do_sonarr = async (args) => {
   seriesEndpoint.searchParams.append("tvdbid", tvdbId);
   seriesEndpoint.searchParams.append("includeSeasonImages", "false");
 
-  args.jobLog("Fetching series data from Sonarr: ", seriesEndpoint.href);
+  args.jobLog("Fetching series data from Sonarr: " + seriesEndpoint.href);
   const response = await fetch(seriesEndpoint, {
     method: "GET",
     headers: {
@@ -228,8 +230,7 @@ const do_sonarr = async (args) => {
   });
   if (!response.ok) {
     args.jobLog(
-      "Failed to fetch series data from Sonarr:",
-      response.statusText
+      "Failed to fetch series data from Sonarr: " + response.statusText
     );
     throw new Error("Failed to fetch series data from Sonarr.");
   }
@@ -237,10 +238,10 @@ const do_sonarr = async (args) => {
   const responseJson = await response.json();
   const series = responseJson[0];
   if (!series) {
-    args.jobLog("Series not found:", tvdbId);
+    args.jobLog("Series not found:" + tvdbId);
     throw new Error("Series not found.");
   }
-  args.jobLog("Fetched series data from Sonarr: ", series);
+  args.jobLog("Fetched series data from Sonarr: " + series);
 
   const langs = require("langs");
   const nativeLanguage = series.originalLanguage.name;
@@ -253,6 +254,8 @@ const do_sonarr = async (args) => {
 };
 
 const do_radarr = async (args) => {
+  args.jobLog("Running Radarr strategy...");
+
   const radarrApiKey = args.inputs.radarr_api_key;
   if (!radarrApiKey) {
     args.jobLog("Radarr API key is not set!");
@@ -262,7 +265,7 @@ const do_radarr = async (args) => {
   let filePath = args.inputFileObj._id;
   let tmdbId = extractTmdbId(filePath);
   if (!tmdbId) {
-    args.jobLog("TMDB ID not found in file name:", filePath);
+    args.jobLog("TMDB ID not found in file name: " + filePath);
     throw new Error("TMDB ID not found in file name.");
   }
 
