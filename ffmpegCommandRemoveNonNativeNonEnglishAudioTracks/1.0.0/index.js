@@ -158,7 +158,7 @@ const filterAudioTracks = (args, langsToKeep, nativeLanguage) => {
   let nativeStream = null;
 
   for (const stream of args.variables.ffmpegCommand.streams) {
-    args.jobLog("Processing audio stream: " + stream.index);
+    args.jobLog("Processing stream: " + stream.index);
 
     if (stream.codec_type !== "audio") {
       args.jobLog("Stream is not audio, skipping");
