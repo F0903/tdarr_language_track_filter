@@ -280,6 +280,8 @@ const plugin = async (args) => {
   // eslint-disable-next-line @typescript-eslint/no-unused-vars,no-param-reassign
   args.inputs = lib.loadDefaultValues(args.inputs, details);
 
+  args.installClassicPluginDeps(["langs@2.0.0"]);
+
   const strategies = [
     ["sonarr", do_sonarr],
     ["radarr", do_radarr],
@@ -298,6 +300,5 @@ const plugin = async (args) => {
   };
 };
 
-module.exports.dependencies = ["langs"];
 module.exports.details = details;
 module.exports.plugin = plugin;
