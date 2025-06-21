@@ -139,59 +139,53 @@ const details = () => ({
   ],
 });
 
-const log = (message) => console.log(message);
-
 const extractTmdbId = (str) => {
-  log("Extracting TMDB ID from string:", str);
-
   // Matches [tmdbid-<id>] where <id> is one or more digits
   const match = str.match(/\[tmdbid-(\d+)\]/i);
   return match ? match[1] : null;
 };
 
 const extractTvdbId = (str) => {
-  log("Extracting TVDB ID from string:", str);
-
   // Matches [tvdbid-<id>] where <id> is one or more digits
   const match = str.match(/\[tvdbid-(\d+)\]/i);
   return match ? match[1] : null;
 };
 
 const filterAudioTracks = (args, langsToKeep, nativeLanguage) => {
-  log("Filtering audio tracks for file: ", args.inputFileObj._id);
-  log("Languages to keep: ", langsToKeep);
+  args.jobLog("Filtering audio tracks for file: ", args.inputFileObj._id);
+  args.jobLog("Languages to keep: ", langsToKeep);
 
   let nativeStream = null;
 
   for (const stream of args.variables.ffmpegCommand.streams) {
-    log("Processing audio stream: ", stream.index);
+    args.jobLog("Processing audio stream: ", stream.index);
 
     if (stream.codec_type !== "audio") {
-      log("Stream is not audio, skipping");
+      args.jobLog("Stream is not audio, skipping");
       continue;
     }
 
     if (!stream.tags) {
-      log("Stream has no tags, skipping");
+      args.jobLog("Stream has no tags, skipping");
       continue;
     }
 
     const language = stream.tags.language;
     if (!language) {
-      log("Stream has no language tag, skipping");
+      args.jobLog("Stream has no language tag, skipping");
       continue;
     }
 
     if (!nativeStream && language === nativeLanguage) {
       nativeStream = stream;
-      log(
+      args.jobLog(
         `Found native language stream '${language}' with index ${nativeIndex}`
       );
       continue;
     }
 
     stream.removed = true;
-    log(
+    args.jobLog(
       `Removed stream with index '${stream.index}' and language '${language}'`
     );
   }
@@ -201,7 +195,7 @@ const filterAudioTracks = (args, langsToKeep, nativeLanguage) => {
     nativeStream.outputArgs.push(
       `-disposition:a 0 -disposition:a:${nativeStream.index} 1`
     );
-    log(
+    args.jobLog(
       `Setting native language stream with index '${nativeStream.index}' and language '${nativeLanguage}' as default.`
     );
   }
@@ -210,14 +204,14 @@ const filterAudioTracks = (args, langsToKeep, nativeLanguage) => {
 const do_sonarr = async (args) => {
   const sonarrApiKey = args.inputs.sonarr_api_key;
   if (!sonarrApiKey) {
-    log("Sonarr API key is not set!");
+    args.jobLog("Sonarr API key is not set!");
     throw new Error("Sonarr API key is not set!");
   }
 
   let filePath = args.inputFileObj._id;
   let tvdbId = extractTvdbId(filePath);
   if (!tvdbId) {
-    log("TVDB ID not found in file name:", filePath);
+    args.jobLog("TVDB ID not found in file name:", filePath);
     throw new Error("TVDB ID not found in file name.");
   }
 
@@ -232,17 +226,20 @@ const do_sonarr = async (args) => {
     },
   });
   if (!response.ok) {
-    log("Failed to fetch series data from Sonarr:", response.statusText);
+    args.jobLog(
+      "Failed to fetch series data from Sonarr:",
+      response.statusText
+    );
     throw new Error("Failed to fetch series data from Sonarr.");
   }
 
   const responseJson = await response.json();
   const series = responseJson[0];
   if (!series) {
-    log("Series not found:", tvdbId);
+    args.jobLog("Series not found:", tvdbId);
     throw new Error("Series not found.");
   }
-  log("Fetched series data from Sonarr: ", series);
+  args.jobLog("Fetched series data from Sonarr: ", series);
 
   const langs = require("langs");
   const nativeLanguage = series.originalLanguage.name;
@@ -257,14 +254,14 @@ const do_sonarr = async (args) => {
 const do_radarr = async (args) => {
   const radarrApiKey = args.inputs.radarr_api_key;
   if (!radarrApiKey) {
-    log("Radarr API key is not set!");
+    args.jobLog("Radarr API key is not set!");
     throw new Error("Radarr API key is not set!");
   }
 
   let filePath = args.inputFileObj._id;
   let tmdbId = extractTmdbId(filePath);
   if (!tmdbId) {
-    log("TMDB ID not found in file name:", filePath);
+    args.jobLog("TMDB ID not found in file name:", filePath);
     throw new Error("TMDB ID not found in file name.");
   }
 
@@ -279,7 +276,10 @@ const plugin = async (args) => {
   // eslint-disable-next-line @typescript-eslint/no-unused-vars,no-param-reassign
   args.inputs = lib.loadDefaultValues(args.inputs, details);
 
-  const strategies = [("sonarr", do_sonarr), ("radarr", do_radarr)];
+  const strategies = [
+    ["sonarr", do_sonarr],
+    ["radarr", do_radarr],
+  ];
   for (const [strategy, func] of strategies) {
     if (args.inputs.provider.toLowerCase() === strategy) {
       await func(args);
