@@ -152,13 +152,13 @@ const extractTvdbId = (str) => {
 };
 
 const filterAudioTracks = (args, langsToKeep, nativeLanguage) => {
-  args.jobLog("Filtering audio tracks for file: ", args.inputFileObj._id);
-  args.jobLog("Languages to keep: ", langsToKeep);
+  args.jobLog("Filtering audio tracks for file: " + args.inputFileObj._id);
+  args.jobLog("Languages to keep: " + langsToKeep);
 
   let nativeStream = null;
 
   for (const stream of args.variables.ffmpegCommand.streams) {
-    args.jobLog("Processing audio stream: ", stream.index);
+    args.jobLog("Processing audio stream: " + stream.index);
 
     if (stream.codec_type !== "audio") {
       args.jobLog("Stream is not audio, skipping");
@@ -179,7 +179,7 @@ const filterAudioTracks = (args, langsToKeep, nativeLanguage) => {
     if (!nativeStream && language === nativeLanguage) {
       nativeStream = stream;
       args.jobLog(
-        `Found native language stream '${language}' with index ${nativeIndex}`
+        `Found native language stream '${language}' with index ${nativeStream.index}`
       );
       continue;
     }
