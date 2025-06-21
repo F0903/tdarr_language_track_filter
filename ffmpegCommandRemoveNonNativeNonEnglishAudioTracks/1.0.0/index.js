@@ -208,6 +208,25 @@ const filterAudioTracks = (args, langsToKeep, nativeLanguage) => {
   }
 };
 
+const handle_media_response = (args, mediaJson) => {
+  const langs = require("langs");
+
+  const nativeLanguage = mediaJson.originalLanguage.name;
+  const nativeLanguageCode = langs.where("name", nativeLanguage)[3];
+  if (!nativeLanguageCode) {
+    const err = `Native language '${nativeLanguage}' not found in langs library.`;
+    args.jobLog(err);
+    throw new Error(err);
+  }
+
+  const nativeLanguageThreeLetters = nativeLanguageCode["3"];
+  filterAudioTracks(
+    args,
+    [nativeLanguageThreeLetters, "eng"],
+    nativeLanguageThreeLetters
+  );
+};
+
 const do_sonarr = async (args) => {
   args.jobLog("Running Sonarr strategy...");
 
@@ -250,14 +269,7 @@ const do_sonarr = async (args) => {
   }
   args.jobLog("Fetched series data from Sonarr: " + series);
 
-  const langs = require("langs");
-  const nativeLanguage = series.originalLanguage.name;
-  let nativeLanguageThreeLetters = langs.where("name", nativeLanguage)[3];
-  filterAudioTracks(
-    args,
-    [nativeLanguageThreeLetters, "eng"],
-    nativeLanguageThreeLetters
-  );
+  handle_media_response(args, series);
 };
 
 const do_radarr = async (args) => {
@@ -270,15 +282,39 @@ const do_radarr = async (args) => {
   }
 
   let filePath = args.inputFileObj._id;
-  let tmdbId = extractTmdbId(filePath);
-  if (!tmdbId) {
+  let tmdbid = extractTmdbId(filePath);
+  if (!tmdbid) {
     args.jobLog("TMDB ID not found in file name: " + filePath);
     throw new Error("TMDB ID not found in file name.");
   }
 
-  const radarrUrl = args.inputs.radarr_url;
+  const movieEndpoint = new URL("/api/v3/movie", args.inputs.radarr_url);
+  movieEndpoint.searchParams.append("tmdbid", tmdbid);
+  movieEndpoint.searchParams.append("excludeLocalCovers", "true");
 
-  //TODO: Implement
+  args.jobLog("Fetching movie data from Radarr: " + movieEndpoint.href);
+  const response = await fetch(movieEndpoint, {
+    method: "GET",
+    headers: {
+      Authorization: `Bearer ${radarrApiKey}`,
+    },
+  });
+  if (!response.ok) {
+    args.jobLog(
+      "Failed to fetch movie data from Radarr: " + response.statusText
+    );
+    throw new Error("Failed to fetch movie data from Radarr.");
+  }
+
+  const responseJson = await response.json();
+  const movie = responseJson[0];
+  if (!movie) {
+    args.jobLog("Movie not found:" + tmdbid);
+    throw new Error("Movie not found.");
+  }
+  args.jobLog("Fetched movie data from Radarr: " + movie);
+
+  handle_media_response(args, movie);
 };
 
 const plugin = async (args) => {
