@@ -171,22 +171,31 @@ const filterAudioTracks = (args, langsToKeep, nativeLanguage) => {
       continue;
     }
 
-    const language = stream.tags.language;
-    if (!language) {
+    const streamLanguage = stream.tags.language;
+    if (!streamLanguage) {
       args.jobLog("Stream has no language tag, skipping");
       continue;
     }
 
-    if (langsToKeep.includes(language)) {
-      if (!nativeStream && language === nativeLanguage) {
+    if (langsToKeep.includes(streamLanguage)) {
+      if (!nativeStream && streamLanguage === nativeLanguage) {
         nativeStream = stream;
         args.jobLog(
-          `Found native language stream '${language}' with index ${nativeStream.index}`
+          `Found native language stream '${streamLanguage}' with index ${nativeStream.index}`
         );
+      } else {
+        // We only need to check for this if the stream is not native language.
+        // If the stream is not an allowed language at all, it will be removed anyway.
+        if (stream.disposition && stream.disposition.default) {
+          args.jobLog(
+            `Stream is not native language but marked as default. Clearing...`
+          );
+          stream.outputArgs.push(`-disposition:a:${stream.index} 0`);
+        }
       }
 
       args.jobLog(
-        `Keeping stream with index '${stream.index}' and language '${language}' since it is in the allowed languages.`
+        `Keeping stream with index '${stream.index}' and language '${streamLanguage}' since it is in the allowed languages.`
       );
       hadValidStream = true;
       continue;
@@ -194,7 +203,7 @@ const filterAudioTracks = (args, langsToKeep, nativeLanguage) => {
 
     stream.removed = true;
     args.jobLog(
-      `Removed stream with index '${stream.index}' and language '${language}'`
+      `Removed stream with index '${stream.index}' and language '${streamLanguage}'`
     );
   }
 
@@ -207,9 +216,7 @@ const filterAudioTracks = (args, langsToKeep, nativeLanguage) => {
 
   if (nativeStream) {
     // Set the native language stream as default
-    nativeStream.outputArgs.push(
-      `-disposition:a 0 -disposition:a:${nativeStream.index} 1`
-    );
+    nativeStream.outputArgs.push(`-disposition:a:${nativeStream.index} 1`);
     args.jobLog(
       `Setting native language stream with index '${nativeStream.index}' and language '${nativeLanguage}' as default.`
     );
