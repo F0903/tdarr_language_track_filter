@@ -298,6 +298,6 @@ const plugin = async (args) => {
   };
 };
 
-module.exports.dependencies = ["langs@2.0.0"];
+module.exports.dependencies = ["langs"];
 module.exports.details = details;
 module.exports.plugin = plugin;
