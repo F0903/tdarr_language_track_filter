@@ -177,15 +177,14 @@ const filterAudioTracks = (args, langsToKeep, nativeLanguage) => {
       continue;
     }
 
-    if (!nativeStream && language === nativeLanguage) {
-      nativeStream = stream;
-      args.jobLog(
-        `Found native language stream '${language}' with index ${nativeStream.index}`
-      );
-      continue;
-    }
-
     if (langsToKeep.includes(language)) {
+      if (!nativeStream && language === nativeLanguage) {
+        nativeStream = stream;
+        args.jobLog(
+          `Found native language stream '${language}' with index ${nativeStream.index}`
+        );
+      }
+
       args.jobLog(
         `Keeping stream with index '${stream.index}' and language '${language}' since it is in the allowed languages.`
       );
