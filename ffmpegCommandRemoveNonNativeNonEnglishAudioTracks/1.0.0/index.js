@@ -155,6 +155,7 @@ const filterAudioTracks = (args, langsToKeep, nativeLanguage) => {
   args.jobLog("Filtering audio tracks for file: " + args.inputFileObj._id);
   args.jobLog("Languages to keep: " + langsToKeep);
 
+  let hadValidStream = false;
   let nativeStream = null;
 
   for (const stream of args.variables.ffmpegCommand.streams) {
@@ -188,6 +189,7 @@ const filterAudioTracks = (args, langsToKeep, nativeLanguage) => {
       args.jobLog(
         `Keeping stream with index '${stream.index}' and language '${language}' since it is in the allowed languages.`
       );
+      hadValidStream = true;
       continue;
     }
 
@@ -195,6 +197,13 @@ const filterAudioTracks = (args, langsToKeep, nativeLanguage) => {
     args.jobLog(
       `Removed stream with index '${stream.index}' and language '${language}'`
     );
+  }
+
+  if (!hadValidStream) {
+    const err =
+      "No valid audio streams with neither native language nor English found in file!";
+    args.jobLog(err);
+    throw new Error(err);
   }
 
   if (nativeStream) {
@@ -212,14 +221,20 @@ const handle_media_response = (args, mediaJson) => {
   const langs = require("langs");
 
   const nativeLanguage = mediaJson.originalLanguage.name;
-  const nativeLanguageCode = langs.where("name", nativeLanguage)[3];
+  args.jobLog(`Found native language in media: ${nativeLanguage}`);
+
+  const nativeLanguageCode = langs.where("name", nativeLanguage);
   if (!nativeLanguageCode) {
-    const err = `Native language '${nativeLanguage}' not found in langs library.`;
+    const err = `Could not get language code for '${nativeLanguage}'! Language was not found.`;
     args.jobLog(err);
     throw new Error(err);
   }
 
-  const nativeLanguageThreeLetters = nativeLanguageCode["3"];
+  const nativeLanguageThreeLetters = nativeLanguageCode[3];
+  args.jobLog(
+    `Native language three-letter code: ${nativeLanguageThreeLetters}`
+  );
+
   filterAudioTracks(
     args,
     [nativeLanguageThreeLetters, "eng"],
