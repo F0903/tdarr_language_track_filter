@@ -171,6 +171,10 @@ const clearOtherDefaultStreams = (
   for (const stream of args.variables.ffmpegCommand.streams) {
     if (stream.removed) continue; // Skip removed streams
 
+    if (!stream.tags) {
+      continue;
+    }
+
     args.jobLog(
       `Checking ${stream.codec_type} stream '${stream.index}' with language '${
         stream.tags.language
