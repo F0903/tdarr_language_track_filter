@@ -277,6 +277,36 @@ const handle_media_response = (args, mediaJson) => {
   filterTracks(args, langsToKeep, nativeLanguageThreeLetters);
 };
 
+const fetchMedia = async (args, endpoint, auth) => {
+  args.jobLog("Fetching media from " + endpoint.href);
+
+  let response;
+  try {
+    response = await fetch(endpoint, {
+      method: "GET",
+      headers: {
+        Authorization: `Bearer ${auth}`,
+      },
+    });
+  } catch (error) {
+    const err =
+      `Error while sending request to fetch media from '${endpoint.href}'! ` +
+      error.message;
+    args.jobLog(err);
+    throw new Error(err);
+  }
+
+  if (!response.ok) {
+    const err =
+      `Failed to fetch media from '${endpoint.href}': ` + response.statusText;
+    args.jobLog(err);
+    throw new Error(err);
+  }
+
+  const responseJson = await response.json();
+  return responseJson[0];
+};
+
 const do_sonarr = async (args) => {
   args.jobLog("Running Sonarr strategy...");
 
@@ -297,25 +327,11 @@ const do_sonarr = async (args) => {
   seriesEndpoint.searchParams.append("tvdbid", tvdbId);
   seriesEndpoint.searchParams.append("includeSeasonImages", "false");
 
-  args.jobLog("Fetching series data from Sonarr: " + seriesEndpoint.href);
-  const response = await fetch(seriesEndpoint, {
-    method: "GET",
-    headers: {
-      Authorization: `Bearer ${sonarrApiKey}`,
-    },
-  });
-  if (!response.ok) {
-    args.jobLog(
-      "Failed to fetch series data from Sonarr: " + response.statusText
-    );
-    throw new Error("Failed to fetch series data from Sonarr.");
-  }
-
-  const responseJson = await response.json();
-  const series = responseJson[0];
+  const series = await fetchMedia(args, seriesEndpoint, sonarrApiKey);
   if (!series) {
-    args.jobLog("Series not found:" + tvdbId);
-    throw new Error("Series not found.");
+    const err = `Series not found for TVDB ID: ${tvdbId}`;
+    args.jobLog(err);
+    throw new Error(err);
   }
   args.jobLog("Fetched series data from Sonarr: " + series);
 
@@ -342,25 +358,11 @@ const do_radarr = async (args) => {
   movieEndpoint.searchParams.append("tmdbid", tmdbid);
   movieEndpoint.searchParams.append("excludeLocalCovers", "true");
 
-  args.jobLog("Fetching movie data from Radarr: " + movieEndpoint.href);
-  const response = await fetch(movieEndpoint, {
-    method: "GET",
-    headers: {
-      Authorization: `Bearer ${radarrApiKey}`,
-    },
-  });
-  if (!response.ok) {
-    args.jobLog(
-      "Failed to fetch movie data from Radarr: " + response.statusText
-    );
-    throw new Error("Failed to fetch movie data from Radarr.");
-  }
-
-  const responseJson = await response.json();
-  const movie = responseJson[0];
+  const movie = await fetchMedia(args, movieEndpoint, radarrApiKey);
   if (!movie) {
-    args.jobLog("Movie not found:" + tmdbid);
-    throw new Error("Movie not found.");
+    const err = `Movie not found for TMDB ID: ${tmdbid}`;
+    args.jobLog(err);
+    throw new Error(err);
   }
   args.jobLog("Fetched movie data from Radarr: " + movie);
 
