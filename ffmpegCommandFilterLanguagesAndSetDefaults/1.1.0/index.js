@@ -233,42 +233,41 @@ const filterTracks = (args, langsToKeep, nativeLanguage) => {
       continue;
     }
 
-    if (langsToKeep.includes(streamLanguage)) {
-      if (streamLanguage === nativeLanguage) {
-        if (!defaultAudioStream && stream.codec_type === "audio") {
-          setStreamDefault(stream, "a", "default");
-          defaultAudioStream = stream;
-          args.jobLog(
-            `Setting default audio stream with index '${stream.index}' and language '${streamLanguage}'.`
-          );
-        }
-      } else if (streamLanguage === "eng") {
-        if (!defaultSubtitleStream && stream.codec_type === "subtitle") {
-          setStreamDefault(stream, "s", "default");
-          defaultSubtitleStream = stream;
-          args.jobLog(
-            `Setting default subtitle stream with index '${stream.index}' and language '${streamLanguage}'.`
-          );
-        }
-      }
-
+    // We only want to remove audio streams.
+    if (
+      !langsToKeep.includes(streamLanguage) &&
+      stream.codec_type === "audio"
+    ) {
+      stream.removed = true;
+      removedStream = true;
       args.jobLog(
-        `Keeping stream with index '${stream.index}' and language '${streamLanguage}' since it is in the allowed languages.`
+        `Removed ${stream.codec_type} stream with index '${stream.index}' and language '${streamLanguage}'`
       );
       continue;
     }
 
-    if (stream.codec_type !== "audio") {
-      args.jobLog(
-        `Keeping stream with index '${stream.index}' and language '${streamLanguage}' since it is not an audio stream.`
-      );
-      continue; //  We only want to remove audio streams.
+    if (streamLanguage === nativeLanguage) {
+      if (!defaultAudioStream && stream.codec_type === "audio") {
+        setStreamDefault(stream, "a", "default");
+        defaultAudioStream = stream;
+        args.jobLog(
+          `Setting default audio stream with index '${stream.index}' and language '${streamLanguage}'.`
+        );
+      }
     }
 
-    stream.removed = true;
-    removedStream = true;
+    if (streamLanguage === "eng") {
+      if (!defaultSubtitleStream && stream.codec_type === "subtitle") {
+        setStreamDefault(stream, "s", "default");
+        defaultSubtitleStream = stream;
+        args.jobLog(
+          `Setting default subtitle stream with index '${stream.index}' and language '${streamLanguage}'.`
+        );
+      }
+    }
+
     args.jobLog(
-      `Removed ${stream.codec_type} stream with index '${stream.index}' and language '${streamLanguage}'`
+      `Keeping stream with index '${stream.index}' and language '${streamLanguage}' since it is in the allowed languages.`
     );
   }
 
