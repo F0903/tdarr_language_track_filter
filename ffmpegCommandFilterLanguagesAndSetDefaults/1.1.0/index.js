@@ -190,7 +190,7 @@ const filterTracks = (args, langsToKeep, nativeLanguage) => {
           setStreamDefault(stream, "a", "default");
           defaultAudioStream = stream;
           args.jobLog(
-            `Setting default language audio stream with index '${stream.index}' and language '${nativeLanguage}'.`
+            `Setting default audio stream with index '${stream.index}' and language '${streamLanguage}'.`
           );
         }
       } else if (streamLanguage === "eng") {
@@ -198,7 +198,7 @@ const filterTracks = (args, langsToKeep, nativeLanguage) => {
           setStreamDefault(stream, "s", "default");
           defaultSubtitleStream = stream;
           args.jobLog(
-            `Setting default language subtitle stream with index '${stream.index}' and language '${nativeLanguage}'.`
+            `Setting default subtitle stream with index '${stream.index}' and language '${streamLanguage}'.`
           );
         }
       }
