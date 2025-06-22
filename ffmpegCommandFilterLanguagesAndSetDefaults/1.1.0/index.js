@@ -161,6 +161,40 @@ const setStreamDefault = (stream, streamType, defaultValue) => {
   );
 };
 
+const clearOtherDefaultStreams = (
+  args,
+  defaultAudioStream,
+  defaultSubtitleStream
+) => {
+  // If we find a stream that is marked as default, but not the one we set as default, we need to clear it.
+  // This is to ensure that we only have one default audio and one default subtitle stream.
+  for (const stream of args.variables.ffmpegCommand.streams) {
+    const streamLanguage = stream.tags.language;
+    if (
+      stream.disposition.default == "1" ||
+      stream.disposition.default === "default"
+    ) {
+      if (
+        streamLanguage.codec_type === "audio" &&
+        stream !== defaultAudioStream
+      ) {
+        setStreamDefault(stream, "a", "0");
+        args.jobLog(
+          `Found default audio stream that was different than the one we marked. Clearing...`
+        );
+      } else if (
+        streamLanguage.codec_type === "subtitle" &&
+        stream !== defaultSubtitleStream
+      ) {
+        setStreamDefault(stream, "s", "0");
+        args.jobLog(
+          `Found default subtitle stream that was different than the one we marked. Clearing...`
+        );
+      }
+    }
+  }
+};
+
 // Returns true if any stream was removed, false otherwise.
 const filterTracks = (args, langsToKeep, nativeLanguage) => {
   args.jobLog("Filtering audio tracks for file: " + args.inputFileObj._id);
@@ -208,31 +242,6 @@ const filterTracks = (args, langsToKeep, nativeLanguage) => {
         }
       }
 
-      // If we find a stream that is marked as default, but not the one we set as default, we need to clear it.
-      // This is to ensure that we only have one default audio and one default subtitle stream.
-      if (
-        stream.disposition.default == "1" ||
-        stream.disposition.default === "default"
-      ) {
-        if (
-          streamLanguage.codec_type === "audio" &&
-          stream !== defaultAudioStream
-        ) {
-          setStreamDefault(stream, "a", "0");
-          args.jobLog(
-            `Found default audio stream that was different than the one we marked. Clearing...`
-          );
-        } else if (
-          streamLanguage.codec_type === "subtitle" &&
-          stream !== defaultSubtitleStream
-        ) {
-          setStreamDefault(stream, "s", "0");
-          args.jobLog(
-            `Found default subtitle stream that was different than the one we marked. Clearing...`
-          );
-        }
-      }
-
       args.jobLog(
         `Keeping stream with index '${stream.index}' and language '${streamLanguage}' since it is in the allowed languages.`
       );
@@ -240,6 +249,9 @@ const filterTracks = (args, langsToKeep, nativeLanguage) => {
     }
 
     if (stream.codec_type !== "audio") {
+      args.jobLog(
+        `Keeping stream with index '${stream.index}' and language '${streamLanguage}' since it is not an audio stream.`
+      );
       continue; //  We only want to remove audio streams.
     }
 
@@ -249,6 +261,9 @@ const filterTracks = (args, langsToKeep, nativeLanguage) => {
       `Removed ${stream.codec_type} stream with index '${stream.index}' and language '${streamLanguage}'`
     );
   }
+
+  // We have to go through the streams again, since there might default streams before the one we set as default.
+  clearOtherDefaultStreams(args, defaultAudioStream, defaultSubtitleStream);
 
   if (!removedStream) {
     args.jobLog("No streams were removed. No work needs to be done.");
