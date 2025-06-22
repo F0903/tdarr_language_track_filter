@@ -171,10 +171,11 @@ const clearOtherDefaultStreams = (
   for (const stream of args.variables.ffmpegCommand.streams) {
     if (stream.removed) continue; // Skip removed streams
 
-    if (
-      stream.disposition.default == "1" ||
-      stream.disposition.default === "default"
-    ) {
+    args.jobLog(
+      `Checking ${stream.codec_type} stream '${stream.index}' with language '${stream.tags.language}' and default disposition '${stream.disposition.default}'`
+    );
+
+    if (stream.disposition.default) {
       args.jobLog(
         `Found default ${stream.codec_type} stream '${stream.index}' with language '${stream.tags.language}'`
       );
@@ -182,7 +183,7 @@ const clearOtherDefaultStreams = (
         stream.codec_type === "audio" &&
         stream.index !== defaultAudioStream.index
       ) {
-        setStreamDefault(stream, "a", "0");
+        setStreamDefault(stream, "a", 0);
         args.jobLog(
           `Found default audio stream that was different than the one we marked. Clearing...`
         );
@@ -190,7 +191,7 @@ const clearOtherDefaultStreams = (
         stream.codec_type === "subtitle" &&
         stream.index !== defaultSubtitleStream.index
       ) {
-        setStreamDefault(stream, "s", "0");
+        setStreamDefault(stream, "s", 0);
         args.jobLog(
           `Found default subtitle stream that was different than the one we marked. Clearing...`
         );
