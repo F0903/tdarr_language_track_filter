@@ -316,7 +316,7 @@ const handle_media_response = (args, mediaJson) => {
     langsToKeep,
     nativeLanguageThreeLetters
   );
-  args.variables.ffmpegCommand.overallOuputArguments.push("-c copy");
+  args.variables.ffmpegCommand.overallOuputArguments.push("-c", "copy");
 
   return removedStream;
 };
