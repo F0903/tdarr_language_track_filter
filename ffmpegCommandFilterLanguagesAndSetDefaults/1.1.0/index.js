@@ -154,9 +154,8 @@ const extractTvdbId = (str) => {
   return match ? match[1] : null;
 };
 
-const setStreamDefault = (args, streamType, defaultValue) => {
-  // Yes, Tdarr spells this 'Ouput'
-  args.variables.ffmpegCommand.overallOuputArguments.push(
+const setStreamDefault = (stream, streamType, defaultValue) => {
+  stream.outputArgs.push(
     `-disposition:${streamType}:{outputTypeIndex}`,
     defaultValue
   );
@@ -191,7 +190,7 @@ const clearOtherDefaultStreams = (
         stream.codec_type === "audio" &&
         stream.index !== defaultAudioStream.index
       ) {
-        setStreamDefault(args, "a", "0");
+        setStreamDefault(stream, "a", "0");
         args.jobLog(
           `Found default audio stream that was different than the one we marked. Clearing...`
         );
@@ -200,7 +199,7 @@ const clearOtherDefaultStreams = (
         stream.codec_type === "subtitle" &&
         stream.index !== defaultSubtitleStream.index
       ) {
-        setStreamDefault(args, "s", "0");
+        setStreamDefault(stream, "s", "0");
         args.jobLog(
           `Found default subtitle stream that was different than the one we marked. Clearing...`
         );
@@ -254,7 +253,7 @@ const filterTracks = (args, langsToKeep, nativeLanguage) => {
 
     if (streamLanguage === nativeLanguage) {
       if (!defaultAudioStream && stream.codec_type === "audio") {
-        setStreamDefault(args, "a", "default");
+        setStreamDefault(stream, "a", "default");
         defaultAudioStream = stream;
         args.jobLog(
           `Setting default audio stream with index '${stream.index}' and language '${streamLanguage}'.`
@@ -264,7 +263,7 @@ const filterTracks = (args, langsToKeep, nativeLanguage) => {
 
     if (streamLanguage === "eng") {
       if (!defaultSubtitleStream && stream.codec_type === "subtitle") {
-        setStreamDefault(args, "s", "default");
+        setStreamDefault(stream, "s", "default");
         defaultSubtitleStream = stream;
         args.jobLog(
           `Setting default subtitle stream with index '${stream.index}' and language '${streamLanguage}'.`
