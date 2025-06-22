@@ -311,7 +311,14 @@ const handle_media_response = (args, mediaJson) => {
     ...(nativeLanguageThreeLetters !== "eng" ? ["eng"] : []),
   ];
 
-  return filterTracks(args, langsToKeep, nativeLanguageThreeLetters);
+  const removedStream = filterTracks(
+    args,
+    langsToKeep,
+    nativeLanguageThreeLetters
+  );
+  args.variables.ffmpegCommand.overallOuputArguments.push("-c copy");
+
+  return removedStream;
 };
 
 const fetchMedia = async (args, endpoint, auth) => {
