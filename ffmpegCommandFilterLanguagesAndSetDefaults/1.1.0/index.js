@@ -316,6 +316,8 @@ const handle_media_response = (args, mediaJson) => {
     langsToKeep,
     nativeLanguageThreeLetters
   );
+
+  // For some reason this fixes things in a few specific edge cases.
   args.variables.ffmpegCommand.overallOuputArguments.push("-c", "copy");
 
   return removedStream;
