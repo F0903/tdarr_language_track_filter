@@ -1,9 +1,7 @@
 # Remove Non-Native Non-English Audio Tracks
 
-A WIP Tdarr flow plugin that removes non-native non-english audio tracks, and sets the native audio track to be the default.
+A Tdarr flow plugin that removes non-native non-english audio tracks, and sets the native audio track to be the default.
 
 **IMPORTANT NOTE:** This REQUIRES you to follow the TRaSH guides naming convention by having the series TVDB id like so: [tvdbid-*id*] in the series root folder. And for movies you need the movie TMDB id in the file name like so: [tmdbid-*id*]
 
 It gets the native language of the media via the Sonarr or Radarr API.
-
-Partially based on the plugin Tdarr_Plugin_henk_Keep_Native_Lang_Plus_Eng
