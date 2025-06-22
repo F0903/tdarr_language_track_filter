@@ -169,16 +169,17 @@ const clearOtherDefaultStreams = (
   // If we find a stream that is marked as default, but not the one we set as default, we need to clear it.
   // This is to ensure that we only have one default audio and one default subtitle stream.
   for (const stream of args.variables.ffmpegCommand.streams) {
-    const streamLanguage = stream.tags.language;
+    if (stream.removed) continue; // Skip removed streams
+
     if (
       stream.disposition.default == "1" ||
       stream.disposition.default === "default"
     ) {
       args.jobLog(
-        `Found default ${stream.codec_type} stream '${stream.index}' with language '${streamLanguage}'`
+        `Found default ${stream.codec_type} stream '${stream.index}' with language '${stream.tags.language}'`
       );
       if (
-        streamLanguage.codec_type === "audio" &&
+        stream.codec_type === "audio" &&
         stream.index !== defaultAudioStream.index
       ) {
         setStreamDefault(stream, "a", "0");
@@ -186,7 +187,7 @@ const clearOtherDefaultStreams = (
           `Found default audio stream that was different than the one we marked. Clearing...`
         );
       } else if (
-        streamLanguage.codec_type === "subtitle" &&
+        stream.codec_type === "subtitle" &&
         stream.index !== defaultSubtitleStream.index
       ) {
         setStreamDefault(stream, "s", "0");
