@@ -170,6 +170,9 @@ const clearOtherDefaultStreams = (
   // This is to ensure that we only have one default audio and one default subtitle stream.
   for (const stream of args.variables.ffmpegCommand.streams) {
     const streamLanguage = stream.tags.language;
+    args.jobLog(
+      `Checking default disposition for stream '${stream.index}' with language '${streamLanguage}' = ${stream.disposition.default}`
+    );
     if (
       stream.disposition.default == "1" ||
       stream.disposition.default === "default"
