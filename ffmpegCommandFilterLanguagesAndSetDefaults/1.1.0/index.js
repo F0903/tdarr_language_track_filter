@@ -135,6 +135,10 @@ const details = () => ({
       number: 1,
       tooltip: "Ran successfully. Continue to the next plugin.",
     },
+    {
+      number: 2,
+      tooltip: "No streams were removed, so no work needs to be done.",
+    },
   ],
 });
 
@@ -157,6 +161,7 @@ const setStreamDefault = (stream, streamType, defaultValue) => {
   );
 };
 
+// Returns true if any stream was removed, false otherwise.
 const filterTracks = (args, langsToKeep, nativeLanguage) => {
   args.jobLog("Filtering audio tracks for file: " + args.inputFileObj._id);
   args.jobLog("Languages to keep: " + langsToKeep);
@@ -247,10 +252,12 @@ const filterTracks = (args, langsToKeep, nativeLanguage) => {
 
   if (!removedStream) {
     args.jobLog("No streams were removed. No work needs to be done.");
-    return;
   }
+
+  return removedStream;
 };
 
+// Returns result from track filtering.
 const handle_media_response = (args, mediaJson) => {
   const langs = require("langs");
 
@@ -274,7 +281,8 @@ const handle_media_response = (args, mediaJson) => {
     // Add English if the native language is not English
     ...(nativeLanguageThreeLetters !== "eng" ? ["eng"] : []),
   ];
-  filterTracks(args, langsToKeep, nativeLanguageThreeLetters);
+
+  return filterTracks(args, langsToKeep, nativeLanguageThreeLetters);
 };
 
 const fetchMedia = async (args, endpoint, auth) => {
@@ -335,7 +343,7 @@ const do_sonarr = async (args) => {
   }
   args.jobLog("Fetched series data from Sonarr: " + series);
 
-  handle_media_response(args, series);
+  return handle_media_response(args, series);
 };
 
 const do_radarr = async (args) => {
@@ -366,7 +374,7 @@ const do_radarr = async (args) => {
   }
   args.jobLog("Fetched movie data from Radarr: " + movie);
 
-  handle_media_response(args, movie);
+  return handle_media_response(args, movie);
 };
 
 const plugin = async (args) => {
@@ -383,11 +391,11 @@ const plugin = async (args) => {
     radarr: do_radarr,
   };
   const strategyToExecute = args.inputs.provider.toLowerCase();
-  await strategies[strategyToExecute](args);
+  const needs_work = await strategies[strategyToExecute](args);
 
   return {
     outputFileObj: args.inputFileObj,
-    outputNumber: 1,
+    outputNumber: needs_work ? 1 : 2,
     variables: args.variables,
   };
 };
