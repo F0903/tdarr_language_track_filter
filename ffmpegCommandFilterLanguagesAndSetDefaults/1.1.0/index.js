@@ -176,14 +176,16 @@ const clearOtherDefaultStreams = (
     }
 
     args.jobLog(
-      `Checking ${stream.codec_type} stream '${stream.index}' with language '${
+      `Checking ${stream.codec_type} stream '${
+        stream.index
+      }' with language code'${
         stream.tags.language
       }' and disposition '${JSON.stringify(stream.disposition)}'`
     );
 
     if (stream.disposition.default) {
       args.jobLog(
-        `Found default ${stream.codec_type} stream '${stream.index}' with language '${stream.tags.language}'`
+        `Found default ${stream.codec_type} stream '${stream.index}' with language code'${stream.tags.language}'`
       );
       if (
         defaultAudioStream &&
@@ -207,6 +209,13 @@ const clearOtherDefaultStreams = (
     }
   }
 };
+
+function getFullLanguageName(threeLetterCode) {
+  const langs = require("langs");
+  const info = langs.where(threeLetterCode);
+  if (!info) return false;
+  return info.name;
+}
 
 // Returns true if any stream was removed, false otherwise.
 const filterTracks = (args, langsToKeep, nativeLanguage) => {
@@ -232,47 +241,45 @@ const filterTracks = (args, langsToKeep, nativeLanguage) => {
       continue;
     }
 
-    const streamLanguage = stream.tags.language;
-    if (!streamLanguage) {
+    const streamLangCode = stream.tags.language;
+    if (!streamLangCode) {
       args.jobLog("Stream has no language tag, skipping");
       continue;
     }
+    const fullStreamLangName = getFullLanguageName(streamLangCode);
 
     // We only want to remove audio streams.
-    if (
-      !langsToKeep.includes(streamLanguage) &&
-      stream.codec_type === "audio"
-    ) {
+    if (!langsToKeep.has(fullStreamLangName) && stream.codec_type === "audio") {
       stream.removed = true;
       removedStream = true;
       args.jobLog(
-        `Removed ${stream.codec_type} stream with index '${stream.index}' and language '${streamLanguage}'`
+        `Removed ${stream.codec_type} stream with index '${stream.index}' and language '${streamLangCode}'`
       );
       continue;
     }
 
-    if (streamLanguage === nativeLanguage) {
+    if (fullStreamLangName === nativeLanguage) {
       if (!defaultAudioStream && stream.codec_type === "audio") {
         setStreamDefault(stream, "a", "default");
         defaultAudioStream = stream;
         args.jobLog(
-          `Setting default audio stream with index '${stream.index}' and language '${streamLanguage}'.`
+          `Setting default audio stream with index '${stream.index}' and language '${streamLangCode}'.`
         );
       }
     }
 
-    if (streamLanguage === "eng") {
+    if (fullStreamLangName === "English") {
       if (!defaultSubtitleStream && stream.codec_type === "subtitle") {
         setStreamDefault(stream, "s", "default");
         defaultSubtitleStream = stream;
         args.jobLog(
-          `Setting default subtitle stream with index '${stream.index}' and language '${streamLanguage}'.`
+          `Setting default subtitle stream with index '${stream.index}' and language '${streamLangCode}'.`
         );
       }
     }
 
     args.jobLog(
-      `Keeping ${stream.codec_type} stream with index '${stream.index}' and language '${streamLanguage}'`
+      `Keeping ${stream.codec_type} stream with index '${stream.index}' and language '${streamLangCode}'`
     );
   }
 
@@ -288,27 +295,13 @@ const filterTracks = (args, langsToKeep, nativeLanguage) => {
 
 // Returns result from track filtering.
 const handle_media_response = (args, mediaJson) => {
-  const langs = require("langs");
-
   const nativeLanguage = mediaJson.originalLanguage.name;
   args.jobLog(`Found native language in media: ${nativeLanguage}`);
 
-  const nativeLanguageCode = langs.where("name", nativeLanguage);
-  if (!nativeLanguageCode) {
-    const err = `Could not get language code for '${nativeLanguage}'! Language was not found.`;
-    args.jobLog(err);
-    throw new Error(err);
-  }
-
-  const nativeLanguageThreeLetters = nativeLanguageCode[3];
-  args.jobLog(
-    `Native language three-letter code: ${nativeLanguageThreeLetters}`
-  );
-
   const langsToKeep = [
-    nativeLanguageThreeLetters,
+    nativeLanguage,
     // Add English if the native language is not English
-    ...(nativeLanguageThreeLetters !== "eng" ? ["eng"] : []),
+    ...(nativeLanguage !== "English" ? ["English"] : []),
   ];
 
   const removedStream = filterTracks(
