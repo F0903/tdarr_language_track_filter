@@ -190,6 +190,7 @@ const clearOtherDefaultStreams = (
           `Found default audio stream that was different than the one we marked. Clearing...`
         );
       } else if (
+        defaultSubtitleStream &&
         stream.codec_type === "subtitle" &&
         stream.index !== defaultSubtitleStream.index
       ) {
@@ -212,7 +213,9 @@ const filterTracks = (args, langsToKeep, nativeLanguage) => {
   let defaultSubtitleStream = null;
 
   for (const stream of args.variables.ffmpegCommand.streams) {
-    args.jobLog("Processing stream: " + stream.index);
+    args.jobLog(
+      `Processing ${stream.codec_type} stream with index '${stream.index}'`
+    );
 
     if (stream.codec_type !== "audio" && stream.codec_type !== "subtitle") {
       args.jobLog("Stream is not audio nor subtitle, skipping");
