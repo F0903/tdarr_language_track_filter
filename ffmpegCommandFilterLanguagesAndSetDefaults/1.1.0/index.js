@@ -155,7 +155,7 @@ const extractTvdbId = (str) => {
 };
 
 const setStreamDefault = (args, streamType, defaultValue) => {
-  args.ffmpegCommand.overallOutputArgs.push(
+  args.ffmpegCommand.overallOuputArgs.push(
     `-disposition:${streamType}:{outputTypeIndex}`,
     defaultValue
   );
