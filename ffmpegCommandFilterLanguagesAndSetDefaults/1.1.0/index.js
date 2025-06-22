@@ -156,7 +156,7 @@ const extractTvdbId = (str) => {
 
 const setStreamDefault = (stream, streamType, defaultValue) => {
   stream.outputArgs.push(
-    `-disposition:${streamType}:${stream.index}`,
+    `-disposition:${streamType}:{outputTypeIndex}`,
     defaultValue
   );
 };
