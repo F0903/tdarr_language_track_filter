@@ -168,7 +168,7 @@ const filterTracks = (args, langsToKeep, nativeLanguage) => {
   for (const stream of args.variables.ffmpegCommand.streams) {
     args.jobLog("Processing stream: " + stream.index);
 
-    if (stream.codec_type !== "audio" || stream.codec_type !== "subtitle") {
+    if (stream.codec_type !== "audio" && stream.codec_type !== "subtitle") {
       args.jobLog("Stream is not audio nor subtitle, skipping");
       continue;
     }
