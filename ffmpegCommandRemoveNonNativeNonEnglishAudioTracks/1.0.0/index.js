@@ -216,9 +216,11 @@ const filterAudioTracks = (args, langsToKeep, nativeLanguage) => {
 
   if (nativeStream) {
     // Set the native language stream as default
+    /* DEBUG TESTING
     args.variables.ffmpegCommand.overallOuputArguments.push(
       `-disposition:a:${nativeStream.index} default`
     );
+    */
     args.jobLog(
       `Setting native language stream with index '${nativeStream.index}' and language '${nativeLanguage}' as default.`
     );
