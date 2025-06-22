@@ -381,7 +381,7 @@ const plugin = async (args) => {
     radarr: do_radarr,
   };
   const strategyToExecute = args.inputs.provider.toLowerCase();
-  strategies[strategyToExecute](args);
+  await strategies[strategyToExecute](args);
 
   return {
     outputFileObj: args.inputFileObj,
