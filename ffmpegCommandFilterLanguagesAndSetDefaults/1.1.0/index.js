@@ -1,10 +1,9 @@
 "use strict";
 
 const details = () => ({
-  name: "Remove Non-Native Non-English Audio Tracks",
-  description: `Removes audio tracks that are not in the native language or are not English.
-    Native language is determined by the Sonarr/Radarr API.
-    This plugin also sets the audio track with the native language as the default track.`,
+  name: "Filter Languages And Set Defaults",
+  description: `Removes audio tracks that are not in the native language or are not English, and sets the first English (if any) subtitle to be the default.
+    Native language is determined by the Sonarr/Radarr API.`,
   tags: "audio",
   style: {
     borderColor: "#6efefc",
@@ -163,8 +162,8 @@ const filterTracks = (args, langsToKeep, nativeLanguage) => {
   args.jobLog("Languages to keep: " + langsToKeep);
 
   let removedStream = false;
-  let nativeAudioStream = null;
-  let nativeSubtitleStream = null;
+  let defaultAudioStream = null;
+  let defaultSubtitleStream = null;
 
   for (const stream of args.variables.ffmpegCommand.streams) {
     args.jobLog("Processing stream: " + stream.index);
@@ -187,17 +186,19 @@ const filterTracks = (args, langsToKeep, nativeLanguage) => {
 
     if (langsToKeep.includes(streamLanguage)) {
       if (streamLanguage === nativeLanguage) {
-        if (!nativeAudioStream && stream.codec_type === "audio") {
+        if (!defaultAudioStream && stream.codec_type === "audio") {
           setStreamDefault(stream, "a", "default");
-          nativeAudioStream = stream;
+          defaultAudioStream = stream;
           args.jobLog(
-            `Setting native language audio stream with index '${stream.index}' and language '${nativeLanguage}' as default.`
+            `Setting default language audio stream with index '${stream.index}' and language '${nativeLanguage}'.`
           );
-        } else if (!nativeSubtitleStream && stream.codec_type === "subtitle") {
+        }
+      } else if (streamLanguage === "eng") {
+        if (!defaultSubtitleStream && stream.codec_type === "subtitle") {
           setStreamDefault(stream, "s", "default");
-          nativeSubtitleStream = stream;
+          defaultSubtitleStream = stream;
           args.jobLog(
-            `Setting native language subtitle stream with index '${stream.index}' and language '${nativeLanguage}' as default.`
+            `Setting default language subtitle stream with index '${stream.index}' and language '${nativeLanguage}'.`
           );
         }
       }
@@ -210,7 +211,7 @@ const filterTracks = (args, langsToKeep, nativeLanguage) => {
       ) {
         if (
           streamLanguage.codec_type === "audio" &&
-          stream !== nativeAudioStream
+          stream !== defaultAudioStream
         ) {
           setStreamDefault(stream, "a", "0");
           args.jobLog(
@@ -218,7 +219,7 @@ const filterTracks = (args, langsToKeep, nativeLanguage) => {
           );
         } else if (
           streamLanguage.codec_type === "subtitle" &&
-          stream !== nativeSubtitleStream
+          stream !== defaultSubtitleStream
         ) {
           setStreamDefault(stream, "s", "0");
           args.jobLog(
