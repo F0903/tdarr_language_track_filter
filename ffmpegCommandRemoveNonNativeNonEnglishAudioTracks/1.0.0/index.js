@@ -217,7 +217,7 @@ const filterAudioTracks = (args, langsToKeep, nativeLanguage) => {
   if (nativeStream) {
     // Set the native language stream as default
     nativeStream.outputArgs.push(
-      `-disposition:a:${nativeStream.index} default`
+      `-disposition:a:${nativeStream.index}=default`
     );
     args.jobLog(
       `Setting native language stream with index '${nativeStream.index}' and language '${nativeLanguage}' as default.`
