@@ -211,7 +211,7 @@ const filterTracks = (args, langsToKeep, nativeLanguage) => {
       // If we find a stream that is marked as default, but not the one we set as default, we need to clear it.
       // This is to ensure that we only have one default audio and one default subtitle stream.
       if (
-        stream.disposition.default === "1" ||
+        stream.disposition.default == "1" ||
         stream.disposition.default === "default"
       ) {
         if (
