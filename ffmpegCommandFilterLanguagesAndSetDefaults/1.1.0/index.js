@@ -185,7 +185,7 @@ const clearOtherDefaultStreams = (
         stream.codec_type === "audio" &&
         stream.index !== defaultAudioStream.index
       ) {
-        setStreamDefault(stream, "a", 0);
+        setStreamDefault(stream, "a", "0");
         args.jobLog(
           `Found default audio stream that was different than the one we marked. Clearing...`
         );
@@ -194,7 +194,7 @@ const clearOtherDefaultStreams = (
         stream.codec_type === "subtitle" &&
         stream.index !== defaultSubtitleStream.index
       ) {
-        setStreamDefault(stream, "s", 0);
+        setStreamDefault(stream, "s", "0");
         args.jobLog(
           `Found default subtitle stream that was different than the one we marked. Clearing...`
         );
