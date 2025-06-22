@@ -304,11 +304,7 @@ const handle_media_response = (args, mediaJson) => {
     ...(nativeLanguage !== "English" ? ["English"] : []),
   ];
 
-  const removedStream = filterTracks(
-    args,
-    langsToKeep,
-    nativeLanguageThreeLetters
-  );
+  const removedStream = filterTracks(args, langsToKeep, nativeLanguage);
 
   // For some reason this fixes things in a few specific edge cases.
   args.variables.ffmpegCommand.overallOuputArguments.push("-c", "copy");
