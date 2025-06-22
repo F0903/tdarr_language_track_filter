@@ -256,7 +256,7 @@ const filterTracks = (args, langsToKeep, nativeLanguage) => {
       stream.removed = true;
       removedStream = true;
       args.jobLog(
-        `Removed ${stream.codec_type} stream with index '${stream.index}' and language '${streamLangCode}'`
+        `Removed ${stream.codec_type} stream with index '${stream.index}' and language '${fullStreamLangName}'`
       );
       continue;
     }
@@ -266,7 +266,7 @@ const filterTracks = (args, langsToKeep, nativeLanguage) => {
         setStreamDefault(stream, "a", "default");
         defaultAudioStream = stream;
         args.jobLog(
-          `Setting default audio stream with index '${stream.index}' and language '${streamLangCode}'.`
+          `Setting default audio stream with index '${stream.index}' and language '${fullStreamLangName}'.`
         );
       }
     }
@@ -276,13 +276,13 @@ const filterTracks = (args, langsToKeep, nativeLanguage) => {
         setStreamDefault(stream, "s", "default");
         defaultSubtitleStream = stream;
         args.jobLog(
-          `Setting default subtitle stream with index '${stream.index}' and language '${streamLangCode}'.`
+          `Setting default subtitle stream with index '${stream.index}' and language '${fullStreamLangName}'.`
         );
       }
     }
 
     args.jobLog(
-      `Keeping ${stream.codec_type} stream with index '${stream.index}' and language '${streamLangCode}'`
+      `Keeping ${stream.codec_type} stream with index '${stream.index}' and language '${fullStreamLangName}'`
     );
   }
 
