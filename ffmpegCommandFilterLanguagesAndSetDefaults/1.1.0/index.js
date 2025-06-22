@@ -156,7 +156,7 @@ const extractTvdbId = (str) => {
 
 const setStreamDefault = (args, streamType, defaultValue) => {
   // Yes, Tdarr spells this 'Ouput'
-  args.variables.ffmpegCommand.overallOuputArgs.push(
+  args.variables.ffmpegCommand.overallOuputArguments.push(
     `-disposition:${streamType}:{outputTypeIndex}`,
     defaultValue
   );
