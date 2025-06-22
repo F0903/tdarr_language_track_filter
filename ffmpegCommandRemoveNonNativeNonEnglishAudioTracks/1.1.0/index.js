@@ -151,18 +151,26 @@ const extractTvdbId = (str) => {
   return match ? match[1] : null;
 };
 
-const filterAudioTracks = (args, langsToKeep, nativeLanguage) => {
+const setStreamDefault = (stream, streamType, defaultValue) => {
+  stream.outputArgs.push(
+    `-disposition:${streamType}:${stream.index}`,
+    defaultValue
+  );
+};
+
+const filterTracks = (args, langsToKeep, nativeLanguage) => {
   args.jobLog("Filtering audio tracks for file: " + args.inputFileObj._id);
   args.jobLog("Languages to keep: " + langsToKeep);
 
-  let hadValidStream = false;
-  let nativeStream = null;
+  let removedStream = false;
+  let nativeAudioStream = null;
+  let nativeSubtitleStream = null;
 
   for (const stream of args.variables.ffmpegCommand.streams) {
     args.jobLog("Processing stream: " + stream.index);
 
-    if (stream.codec_type !== "audio") {
-      args.jobLog("Stream is not audio, skipping");
+    if (stream.codec_type !== "audio" || stream.codec_type !== "subtitle") {
+      args.jobLog("Stream is not audio nor subtitle, skipping");
       continue;
     }
 
@@ -178,51 +186,67 @@ const filterAudioTracks = (args, langsToKeep, nativeLanguage) => {
     }
 
     if (langsToKeep.includes(streamLanguage)) {
-      if (!nativeStream && streamLanguage === nativeLanguage) {
-        nativeStream = stream;
-        args.jobLog(
-          `Found native language stream '${streamLanguage}' with index ${nativeStream.index}`
-        );
-      } else {
-        // We only need to check for this if the stream is not native language.
-        // If the stream is not an allowed language at all, it will be removed anyway.
-        if (stream.disposition && stream.disposition.default) {
+      if (streamLanguage === nativeLanguage) {
+        if (!nativeAudioStream && stream.codec_type === "audio") {
+          setStreamDefault(stream, "a", "default");
+          nativeAudioStream = stream;
           args.jobLog(
-            `Stream is not native language but marked as default. Clearing...`
+            `Setting native language audio stream with index '${stream.index}' and language '${nativeLanguage}' as default.`
           );
-          stream.outputArgs.push(`-disposition:a:${stream.index}`, "0");
+        } else if (!nativeSubtitleStream && stream.codec_type === "subtitle") {
+          setStreamDefault(stream, "s", "default");
+          nativeSubtitleStream = stream;
+          args.jobLog(
+            `Setting native language subtitle stream with index '${stream.index}' and language '${nativeLanguage}' as default.`
+          );
+        }
+      }
+
+      // If we find a stream that is marked as default, but not the one we set as default, we need to clear it.
+      // This is to ensure that we only have one default audio and one default subtitle stream.
+      if (
+        stream.disposition.default === "1" ||
+        stream.disposition.default === "default"
+      ) {
+        if (
+          streamLanguage.codec_type === "audio" &&
+          stream !== nativeAudioStream
+        ) {
+          setStreamDefault(stream, "a", "0");
+          args.jobLog(
+            `Found default audio stream that was different than the one we marked. Clearing...`
+          );
+        } else if (
+          streamLanguage.codec_type === "subtitle" &&
+          stream !== nativeSubtitleStream
+        ) {
+          setStreamDefault(stream, "s", "0");
+          args.jobLog(
+            `Found default subtitle stream that was different than the one we marked. Clearing...`
+          );
         }
       }
 
       args.jobLog(
         `Keeping stream with index '${stream.index}' and language '${streamLanguage}' since it is in the allowed languages.`
       );
-      hadValidStream = true;
       continue;
     }
 
+    if (stream.codec_type !== "audio") {
+      continue; //  We only want to remove audio streams.
+    }
+
     stream.removed = true;
+    removedStream = true;
     args.jobLog(
-      `Removed stream with index '${stream.index}' and language '${streamLanguage}'`
+      `Removed ${stream.codec_type} stream with index '${stream.index}' and language '${streamLanguage}'`
     );
   }
 
-  if (!hadValidStream) {
-    const err =
-      "No valid audio streams with neither native language nor English found in file!";
-    args.jobLog(err);
-    throw new Error(err);
-  }
-
-  if (nativeStream) {
-    // Set the native language stream as default
-    nativeStream.outputArgs.push(
-      `-disposition:a:${nativeStream.index}`,
-      "default"
-    );
-    args.jobLog(
-      `Setting native language stream with index '${nativeStream.index}' and language '${nativeLanguage}' as default.`
-    );
+  if (!removedStream) {
+    args.jobLog("No streams were removed. No work needs to be done.");
+    return;
   }
 };
 
@@ -244,11 +268,12 @@ const handle_media_response = (args, mediaJson) => {
     `Native language three-letter code: ${nativeLanguageThreeLetters}`
   );
 
-  filterAudioTracks(
-    args,
-    [nativeLanguageThreeLetters, "eng"],
-    nativeLanguageThreeLetters
-  );
+  const langsToKeep = [
+    nativeLanguageThreeLetters,
+    // Add English if the native language is not English
+    ...(nativeLanguageThreeLetters !== "eng" ? ["eng"] : []),
+  ];
+  filterTracks(args, langsToKeep, nativeLanguageThreeLetters);
 };
 
 const do_sonarr = async (args) => {
@@ -350,16 +375,12 @@ const plugin = async (args) => {
 
   await args.installClassicPluginDeps(["langs@2.0.0"]);
 
-  const strategies = [
-    ["sonarr", do_sonarr],
-    ["radarr", do_radarr],
-  ];
-  for (const [strategy, func] of strategies) {
-    if (args.inputs.provider.toLowerCase() === strategy) {
-      await func(args);
-      break;
-    }
-  }
+  const strategies = {
+    sonarr: do_sonarr,
+    radarr: do_radarr,
+  };
+  const strategyToExecute = args.inputs.provider.toLowerCase();
+  strategies[strategyToExecute](args);
 
   return {
     outputFileObj: args.inputFileObj,
