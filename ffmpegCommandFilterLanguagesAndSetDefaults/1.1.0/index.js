@@ -172,7 +172,9 @@ const clearOtherDefaultStreams = (
     if (stream.removed) continue; // Skip removed streams
 
     args.jobLog(
-      `Checking ${stream.codec_type} stream '${stream.index}' with language '${stream.tags.language}' and default disposition '${stream.disposition.default}'`
+      `Checking ${stream.codec_type} stream '${stream.index}' with language '${
+        stream.tags.language
+      }' and disposition '${JSON.stringify(stream.disposition)}'`
     );
 
     if (stream.disposition.default) {
