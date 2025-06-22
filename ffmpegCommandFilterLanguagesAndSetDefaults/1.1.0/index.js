@@ -272,7 +272,7 @@ const filterTracks = (args, langsToKeep, nativeLanguage) => {
     }
 
     args.jobLog(
-      `Keeping stream with index '${stream.index}' and language '${streamLanguage}' since it is in the allowed languages.`
+      `Keeping ${stream.codec_type} stream with index '${stream.index}' and language '${streamLanguage}'`
     );
   }
 
