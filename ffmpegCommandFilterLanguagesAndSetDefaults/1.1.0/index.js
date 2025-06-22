@@ -154,8 +154,8 @@ const extractTvdbId = (str) => {
   return match ? match[1] : null;
 };
 
-const setStreamDefault = (stream, streamType, defaultValue) => {
-  stream.outputArgs.push(
+const setStreamDefault = (args, streamType, defaultValue) => {
+  args.ffmpegCommand.overallOutputArgs.push(
     `-disposition:${streamType}:{outputTypeIndex}`,
     defaultValue
   );
@@ -190,7 +190,7 @@ const clearOtherDefaultStreams = (
         stream.codec_type === "audio" &&
         stream.index !== defaultAudioStream.index
       ) {
-        setStreamDefault(stream, "a", "0");
+        setStreamDefault(args, "a", "0");
         args.jobLog(
           `Found default audio stream that was different than the one we marked. Clearing...`
         );
@@ -199,7 +199,7 @@ const clearOtherDefaultStreams = (
         stream.codec_type === "subtitle" &&
         stream.index !== defaultSubtitleStream.index
       ) {
-        setStreamDefault(stream, "s", "0");
+        setStreamDefault(args, "s", "0");
         args.jobLog(
           `Found default subtitle stream that was different than the one we marked. Clearing...`
         );
@@ -253,7 +253,7 @@ const filterTracks = (args, langsToKeep, nativeLanguage) => {
 
     if (streamLanguage === nativeLanguage) {
       if (!defaultAudioStream && stream.codec_type === "audio") {
-        setStreamDefault(stream, "a", "default");
+        setStreamDefault(args, "a", "default");
         defaultAudioStream = stream;
         args.jobLog(
           `Setting default audio stream with index '${stream.index}' and language '${streamLanguage}'.`
@@ -263,7 +263,7 @@ const filterTracks = (args, langsToKeep, nativeLanguage) => {
 
     if (streamLanguage === "eng") {
       if (!defaultSubtitleStream && stream.codec_type === "subtitle") {
-        setStreamDefault(stream, "s", "default");
+        setStreamDefault(args, "s", "default");
         defaultSubtitleStream = stream;
         args.jobLog(
           `Setting default subtitle stream with index '${stream.index}' and language '${streamLanguage}'.`
