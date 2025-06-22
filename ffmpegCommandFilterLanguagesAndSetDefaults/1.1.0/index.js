@@ -186,6 +186,7 @@ const clearOtherDefaultStreams = (
         `Found default ${stream.codec_type} stream '${stream.index}' with language '${stream.tags.language}'`
       );
       if (
+        defaultAudioStream &&
         stream.codec_type === "audio" &&
         stream.index !== defaultAudioStream.index
       ) {
