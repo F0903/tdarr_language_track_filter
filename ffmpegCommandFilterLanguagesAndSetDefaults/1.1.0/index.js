@@ -247,6 +247,9 @@ const filterTracks = (args, langsToKeep, nativeLanguage) => {
       continue;
     }
     const fullStreamLangName = getFullLanguageName(streamLangCode);
+    args.jobLog(
+      `Got full language name '${fullStreamLangName}' for stream with language code ${streamLangCode}`
+    );
 
     // We only want to remove audio streams.
     if (
