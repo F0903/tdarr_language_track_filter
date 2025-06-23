@@ -212,9 +212,13 @@ const clearOtherDefaultStreams = (
 
 function getFullLanguageName(threeLetterCode) {
   const langs = require("langs");
-  const info = langs.where(threeLetterCode);
-  if (!info) return false;
-  return info.name;
+  // Try all possible code types
+  const codeTypes = ["2B", "2T", "3", "2", "1"];
+  for (const type of codeTypes) {
+    const info = langs.where(type, threeLetterCode);
+    if (info) return info.name;
+  }
+  return false;
 }
 
 // Returns true if any stream was removed, false otherwise.
