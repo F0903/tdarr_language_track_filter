@@ -214,7 +214,7 @@ function getFullLanguageName(threeLetterCode) {
     const info = langs.where(type, threeLetterCode);
     if (info) return info.name;
   }
-  return false;
+  return null;
 }
 
 // Returns true if any stream was removed, false otherwise.
@@ -253,6 +253,7 @@ const filterTracks = (args, langsToKeep, nativeLanguage) => {
 
     // We only want to remove audio streams.
     if (
+      fullStreamLangName &&
       !langsToKeep.includes(fullStreamLangName) &&
       stream.codec_type === "audio"
     ) {
