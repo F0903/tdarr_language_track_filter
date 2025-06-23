@@ -176,16 +176,12 @@ const clearOtherDefaultStreams = (
     }
 
     args.jobLog(
-      `Checking ${stream.codec_type} stream '${
-        stream.index
-      }' with language code'${
-        stream.tags.language
-      }' and disposition '${JSON.stringify(stream.disposition)}'`
+      `Checking ${stream.codec_type} stream '${stream.index}' with language code'${stream.tags.language}' and default = '${stream.disposition.default}'`
     );
 
     if (stream.disposition.default) {
       args.jobLog(
-        `Found default ${stream.codec_type} stream '${stream.index}' with language code'${stream.tags.language}'`
+        `Found default ${stream.codec_type} stream '${stream.index}' with language code '${stream.tags.language}'`
       );
       if (
         defaultAudioStream &&
